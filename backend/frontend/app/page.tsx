@@ -385,7 +385,8 @@ export default function Home() {
         This project builds a system to predict within-scene wedding photo
         rankings from face detection metadata. Given a face_detections.json file,
         the system extracts image-level features, applies a trained pairwise
-        ranking model, and returns predicted rankings for each scene.
+        ranking model, and returns predicted rankings for each scene. The final decision is based on
+        the leverage among size of the dataset, model performance, computational efficiency, and latenecy sensitivity. 
       </p>
     </ReadmeBlock>
 
@@ -538,7 +539,7 @@ export default function Home() {
           <td className="py-3 pr-4">
             Tested a dedicated learning-to-rank model.
           </td>
-          <td className="py-3 pr-4">Underperformed the pairwise Gradient Boosting model.</td>
+          <td className="py-3 pr-4">Slightly underperformed the pairwise Gradient Boosting model. Even the computational complexity is ligher.</td>
           <td className="py-3 pr-4">Rejected</td>
         </tr>
 
