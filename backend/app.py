@@ -1,6 +1,6 @@
 from pathlib import Path
 import json
-from fastapi.middleware.cors import CORSMiddleware
+import math
 
 import joblib
 import numpy as np
@@ -11,6 +11,19 @@ from scipy.stats import spearmanr, kendalltau
 
 from feature_builder import build_features_from_uploaded_json
 
+def clean_for_json(obj):
+    if isinstance(obj, dict):
+        return {key: clean_for_json(value) for key, value in obj.items()}
+
+    if isinstance(obj, list):
+        return [clean_for_json(item) for item in obj]
+
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+
+    return obj
 
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / "model" / "final_pairwise_gb_model.joblib"
@@ -186,7 +199,7 @@ def evaluate_scene_ranking(df: pd.DataFrame):
             "top1_acc": float(metrics_df["top1_acc"].mean()),
         }
 
-        MAX_PREDICTIONS_PER_SCENE = 5
+    MAX_PREDICTIONS_PER_SCENE = 5
 
     if len(predictions) > 0:
         predictions_to_return = (
@@ -202,12 +215,13 @@ def evaluate_scene_ranking(df: pd.DataFrame):
     summary["n_predictions_total"] = int(len(predictions))
     summary["n_predictions_returned"] = int(len(predictions_to_return))
 
-    return {
+    response = {
         "summary": summary,
         "scene_metrics": scene_metrics,
         "predictions": predictions_to_return,
     }
 
+    return clean_for_json(response)
 
 @app.get("/")
 def health_check():
