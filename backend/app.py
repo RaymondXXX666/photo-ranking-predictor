@@ -176,9 +176,9 @@ def evaluate_scene_ranking(df: pd.DataFrame):
         summary = {
             "mode": "evaluation",
             "total_images": total_images,
-        "total_scenes": total_scenes,
-        "ranked_images": ranked_images,
-        "unranked_images": unranked_images,
+            "total_scenes": total_scenes,
+            "ranked_images": ranked_images,
+            "unranked_images": unranked_images,
             "n_scenes_evaluated": int(len(metrics_df)),
             "mean_spearman": float(metrics_df["spearman"].mean()),
             "mean_kendall": float(metrics_df["kendall"].mean()),
@@ -186,10 +186,26 @@ def evaluate_scene_ranking(df: pd.DataFrame):
             "top1_acc": float(metrics_df["top1_acc"].mean()),
         }
 
+        MAX_PREDICTIONS_PER_SCENE = 5
+
+    if len(predictions) > 0:
+        predictions_to_return = (
+            pd.DataFrame(predictions)
+            .sort_values(["scene_id", "predicted_position"])
+            .groupby("scene_id")
+            .head(MAX_PREDICTIONS_PER_SCENE)
+            .to_dict(orient="records")
+        )
+    else:
+        predictions_to_return = []
+
+    summary["n_predictions_total"] = int(len(predictions))
+    summary["n_predictions_returned"] = int(len(predictions_to_return))
+
     return {
         "summary": summary,
         "scene_metrics": scene_metrics,
-        "predictions": predictions,
+        "predictions": predictions_to_return,
     }
 
 
