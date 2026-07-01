@@ -1,6 +1,6 @@
 # Photo Ranking Dataset - Data Structure Documentation
 
-## Live Demo Link:https://photo-ranking-predictor-fxipwojcc-raymond-xiaos-projects.vercel.app
+## Live Demo Link: https://photo-ranking-predictor.vercel.app
 
 ## Overview
 
