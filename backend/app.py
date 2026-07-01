@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+from fastapi.middleware.cors import CORSMiddleware
 
 import joblib
 import numpy as np
@@ -21,7 +22,7 @@ app = FastAPI(title="Wedding Photo Ranking Evaluator")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
