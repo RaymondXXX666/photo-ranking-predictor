@@ -72,10 +72,12 @@ export default function Home() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("http://127.0.0.1:8000/evaluate", {
-        method: "POST",
-        body: formData,
-      });
+      const apiBaseUrl = "https://photo-ranking-predictor.onrender.com";
+
+      const response = await fetch(`${apiBaseUrl}/evaluate`, {
+      method: "POST",
+      body: formData,
+     });
 
       if (!response.ok) {
         throw new Error(`Backend error: ${response.status}`);
