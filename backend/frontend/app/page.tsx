@@ -388,6 +388,13 @@ export default function Home() {
         ranking model, and returns predicted rankings for each scene. The final decision is based on
         the leverage among size of the dataset, model performance, computational efficiency, and latenecy sensitivity. 
       </p>
+      <p>
+        After multiple rounds of experimental comparisons, I ultimately selected the Tuned Pairwise GradientBoostingClassifier as the final model. The Tuned Pairwise GradientBoostingClassifier performed best on the validation set in terms of Pairwise Accuracy and Top-1 Accuracy. We believe these two metrics better reflect the model’s ranking capabilities in this scenarios.
+       Although LightGBM Ranker has advantages in training efficiency and native support for ranking tasks, its overall performance is slightly inferior to that of pairwise methods given the current dataset size. I made the final selection based on empirical results from the validation and test sets.
+       Since the dataset contains a large number of scenes with only 2–3 photos, NDCG has limited discriminative power; therefore, I used Pairwise Accuracy and scene-level ranking correlation metrics (Spearman and Kendall) as the primary evaluation metrics. Feature importance analysis and error case analysis also indicate that the model effectively captures key quality signals such as the midblink probability and focus score of the primary face.
+
+Translated with DeepL.com (free version)
+      </p>
     </ReadmeBlock>
 
     <ReadmeBlock title="Problem Definition">
