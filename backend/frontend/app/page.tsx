@@ -111,14 +111,17 @@ export default function Home() {
           <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-5xl">
             Photo Ranking Predictor
           </h1>
-          <h2 className="mb-4 text-4xl font-bold tracking-tight md:text-5xl">
-            Predict within-scene wedding photo rankings from face detection metadata.
+          <h2 className="mb-4 max-w-4xl text-2xl font-semibold tracking-tight text-neutral-200 md:text-3xl">
+            Scene-level learning-to-rank for wedding photo culling.
           </h2>
 
-          <p className="max-w-3xl text-lg text-neutral-300">
-            Upload a face_detections.json file. The system extracts image-level features
-            from face detection metadata, predicts scene-level photo rankings, and can
-            optionally evaluate the predictions when ground-truth ranks are available.
+          <p className="max-w-4xl text-lg text-neutral-300">
+            Upload a face_detections.json file to predict within-scene photo rankings.
+            The system builds interpretable image-level features from face detection
+            metadata, compares images pairwise within each scene, and surfaces the
+            strongest candidates for review. When ground-truth ranks are available, the
+            demo also evaluates ranking quality using pairwise accuracy, Top-1 accuracy,
+            rank correlation, and larger-scene Top-3 coverage.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <a
@@ -404,12 +407,20 @@ export default function Home() {
               rankings from face detection metadata. Given a face_detections.json file,
               the system extracts image-level features, applies a trained pairwise
               ranking model, and returns predicted rankings for each scene. The final decision is based on
-              the leverage among size of the dataset, model performance, computational efficiency, and latenecy sensitivity.
+              the trade-off between dataset size, model performance, computational efficiency, and latency sensitivity.
             </p>
             <p>
               After multiple rounds of experimental comparisons, I ultimately selected the <strong>Tuned Pairwise GradientBoostingClassifier</strong> as the final model. The Tuned Pairwise GradientBoostingClassifier performed best on the validation set in terms of <strong>Pairwise Accuracy</strong> and <strong>Top-1 Accuracy</strong>. We believe these two metrics better reflect the model’s ranking capabilities in this scenarios.
               Although LightGBM Ranker has advantages in training efficiency and native support for ranking tasks, its overall performance is slightly inferior to that of pairwise methods given the current dataset size. I made the final selection based on empirical results from the validation and test sets.
               Since the dataset contains a large number of scenes with only <strong>2–3</strong> photos, NDCG has limited discriminative power; therefore, I used Pairwise Accuracy and scene-level ranking correlation metrics (Spearman and Kendall) as the primary evaluation metrics. Feature importance analysis and error case analysis also indicate that the model effectively captures key quality signals such as the midblink probability and focus score of the primary face.
+            </p>
+
+            <p>
+              The most useful signals were
+              focus quality, eye-state probabilities, main-subject bad-eye indicators, and
+              worst-case group eye features. I also tested manually weighted composite
+              quality penalties, but removed them after ablation showed weaker held-out
+              generalization.
             </p>
           </ReadmeBlock>
 
@@ -432,12 +443,13 @@ export default function Home() {
 
           <ReadmeBlock title="Feature Engineering">
             <ul className="list-disc space-y-2 pl-6">
-              <li>Face count, selected face count, and category features.</li>
-              <li>Group pose features such as number of primary faces and camera-facing percentage.</li>
-              <li>Aggregate face quality features such as focus, confidence, face area, and position.</li>
-              <li>Eye-state features including open, closed, midblink, glasses, covered, and barely-open probabilities.</li>
-              <li>Main-subject specific features, especially focus and bad-eye indicators.</li>
-              <li>Separate main-subject and non-main-subject bad-eye features.</li>
+              <li>Scene, category, face count, selected-face count, and group-pose features.</li>
+              <li>Aggregate face quality features such as focus, confidence, face area, and face position.</li>
+              <li>Eye-state probability features including open, closed, midblink, covered, glasses, partially-open, and barely-open states.</li>
+              <li>Main-subject specific features, especially main face focus, open-eye probability, closed-eye probability, covered-eye probability, and pose.</li>
+              <li>Separate main-subject and non-main-subject bad-eye counts and ratios, because main-subject failures are more important for photo culling.</li>
+              <li>Robust worst-case features such as maximum main-subject eye penalty, maximum main-subject focus penalty, group minimum open-eye probability, and group maximum closed/covered-eye probability.</li>
+              <li>Composite hand-weighted quality penalties were tested but removed after ablation because they improved validation performance less reliably than atomic worst-case features on the held-out test set.</li>
             </ul>
           </ReadmeBlock>
 
@@ -462,8 +474,7 @@ export default function Home() {
               <li>
                 <strong>Best in Top 3:</strong> whether the photographer-selected best image
                 appears within the model&apos;s top 3 recommendations. This is only calculated
-                for scenes with more than 3 ranked candidates, because Top-3 is trivial for
-                scenes with 2–3 images.
+                for scenes with more than 3 ranked candidates.
               </li>
               <li>
                 <strong>Spearman Correlation:</strong> rank-order correlation between predicted and true ordering.
@@ -475,7 +486,13 @@ export default function Home() {
           </ReadmeBlock>
 
           <ReadmeBlock title="Final Results">
-            <div className="overflow-x-auto">
+            <p>
+              The final Pairwise Gradient Boosting model was evaluated on the held-out test
+              split. The Top-3 metric is reported only on scenes with more than 3 ranked
+              candidates.
+            </p>
+
+            <div className="mt-4 overflow-x-auto">
               <table className="w-full border-collapse text-left text-sm">
                 <thead className="border-b border-neutral-800 text-neutral-400">
                   <tr>
@@ -489,11 +506,12 @@ export default function Home() {
                 </thead>
                 <tbody>
                   <tr className="border-b border-neutral-800/60">
-                    <td className="py-3 pr-4">Pairwise Gradient Boosting</td>
-                    <td className="py-3 pr-4">~81%</td>
-                    <td className="py-3 pr-4">~76%</td>
-                    <td className="py-3 pr-4">~0.65</td>
-                    <td className="py-3 pr-4">~0.63</td>
+                    <td className="py-3 pr-4 font-medium">Pairwise Gradient Boosting</td>
+                    <td className="py-3 pr-4">82.02%</td>
+                    <td className="py-3 pr-4">77.06%</td>
+                    <td className="py-3 pr-4">95.00% on 20 eligible scenes</td>
+                    <td className="py-3 pr-4">0.6617</td>
+                    <td className="py-3 pr-4">0.6405</td>
                   </tr>
                 </tbody>
               </table>
@@ -553,6 +571,33 @@ export default function Home() {
                     </td>
                     <td className="py-3 pr-4">Improved held-out ranking performance.</td>
                     <td className="py-3 pr-4">Kept</td>
+                  </tr>
+
+                  <tr className="border-b border-neutral-800/60">
+                    <td className="py-3 pr-4 font-medium">Robust worst-case quality features</td>
+                    <td className="py-3 pr-4">
+                      Added atomic main-subject and group-level quality signals such as maximum
+                      eye penalty, maximum focus penalty, group minimum open-eye probability, and
+                      group maximum closed/covered-eye probability.
+                    </td>
+                    <td className="py-3 pr-4">
+                      Improved held-out test performance and aligned well with wedding photo
+                      culling failure modes.
+                    </td>
+                    <td className="py-3 pr-4">Kept</td>
+                  </tr>
+
+                  <tr className="border-b border-neutral-800/60">
+                    <td className="py-3 pr-4 font-medium">Composite quality penalty</td>
+                    <td className="py-3 pr-4">
+                      Tested a hand-weighted quality score combining focus, eye-state, and pose
+                      penalties.
+                    </td>
+                    <td className="py-3 pr-4">
+                      Validation performance was less reliable on the held-out test set, suggesting
+                      the hand-tuned composite score introduced overfitting.
+                    </td>
+                    <td className="py-3 pr-4">Rejected</td>
                   </tr>
 
                   <tr className="border-b border-neutral-800/60">
