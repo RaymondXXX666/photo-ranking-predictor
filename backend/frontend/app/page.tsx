@@ -26,6 +26,7 @@ type SceneMetric = {
   kendall: number;
   pairwise_acc: number;
   top1_acc: number;
+  top3_contains_best?: number | null;
 };
 
 type Prediction = {
