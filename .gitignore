@@ -10,4 +10,5 @@ frontend/out/
 backend/__pycache__/
 
 data/
-processed/
+processed/.vscode/
+backend/feature_builder_backup.py
