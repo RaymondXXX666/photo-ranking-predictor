@@ -655,39 +655,56 @@ export default function Home() {
               <table className="w-full border-collapse text-left text-sm">
                 <thead className="border-b border-neutral-800 text-neutral-400">
                   <tr>
-                    <th className="py-3 pr-4">Rank Gap</th>
-                    <th className="py-3 pr-4">Example</th>
+                    <th className="py-3 pr-4">True Rank Gap</th>
+                    <th className="py-3 pr-4">Example Pair Comparisons</th>
+                    <th className="py-3 pr-4">Pairs</th>
                     <th className="py-3 pr-4">Pairwise Accuracy</th>
                     <th className="py-3 pr-4">Interpretation</th>
                   </tr>
                 </thead>
+
                 <tbody>
                   <tr className="border-b border-neutral-800/60">
                     <td className="py-3 pr-4 font-medium">1</td>
-                    <td className="py-3 pr-4">Rank 1 vs Rank 2</td>
-                    <td className="py-3 pr-4">~76.7%</td>
-                    <td className="py-3 pr-4">Hardest; often visually similar or subjective.</td>
+                    <td className="py-3 pr-4">Rank 1 vs 2, 2 vs 3, 3 vs 4</td>
+                    <td className="py-3 pr-4">189</td>
+                    <td className="py-3 pr-4">78.31%</td>
+                    <td className="py-3 pr-4">
+                      Hardest bucket; adjacent ranks are often visually similar or
+                      subjective.
+                    </td>
                   </tr>
 
                   <tr className="border-b border-neutral-800/60">
                     <td className="py-3 pr-4 font-medium">2</td>
-                    <td className="py-3 pr-4">Rank 1 vs Rank 3</td>
-                    <td className="py-3 pr-4">~82.5%</td>
-                    <td className="py-3 pr-4">Moderately easier.</td>
+                    <td className="py-3 pr-4">Rank 1 vs 3, 2 vs 4, 3 vs 5</td>
+                    <td className="py-3 pr-4">80</td>
+                    <td className="py-3 pr-4">83.75%</td>
+                    <td className="py-3 pr-4">
+                      Easier than adjacent-rank comparisons as quality differences become
+                      clearer.
+                    </td>
                   </tr>
 
                   <tr className="border-b border-neutral-800/60">
                     <td className="py-3 pr-4 font-medium">3</td>
-                    <td className="py-3 pr-4">Rank 1 vs Rank 4</td>
-                    <td className="py-3 pr-4">~91.4%</td>
-                    <td className="py-3 pr-4">Clear quality gap.</td>
+                    <td className="py-3 pr-4">Rank 1 vs 4, 2 vs 5, 3 vs 6</td>
+                    <td className="py-3 pr-4">35</td>
+                    <td className="py-3 pr-4">91.43%</td>
+                    <td className="py-3 pr-4">
+                      Clearer separation between stronger and weaker images.
+                    </td>
                   </tr>
 
-                  <tr>
-                    <td className="py-3 pr-4 font-medium">4+</td>
-                    <td className="py-3 pr-4">Rank 1 vs Rank 5+</td>
-                    <td className="py-3 pr-4">~93%+</td>
-                    <td className="py-3 pr-4">Usually much easier to separate.</td>
+                  <tr className="border-b border-neutral-800/60">
+                    <td className="py-3 pr-4 font-medium">4</td>
+                    <td className="py-3 pr-4">Rank 1 vs 5, 2 vs 6, 3 vs 7</td>
+                    <td className="py-3 pr-4">15</td>
+                    <td className="py-3 pr-4">93.33%</td>
+                    <td className="py-3 pr-4">
+                      Usually much easier to separate because the rank difference is
+                      larger.
+                    </td>
                   </tr>
                 </tbody>
               </table>
