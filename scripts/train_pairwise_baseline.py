@@ -150,6 +150,20 @@ def top1_accuracy(group):
     true_best_rank = group["rank"].min()
     return 1.0 if pred_best["rank"] == true_best_rank else 0.0
 
+def topk_contains_best(group, k=3):
+    """
+    Whether the true best image appears in the model's top-k recommendations.
+    This is useful for photo culling because the model does not always need to
+    put the best image at rank 1, as long as it surfaces it near the top.
+    """
+    if len(group) <= k:
+        return np.nan
+
+    topk = group.sort_values("pred_score", ascending=False).head(k)
+    true_best_rank = group["rank"].min()
+
+    return float((topk["rank"] == true_best_rank).any())
+
 
 def evaluate_predictions(pred_df, name):
     scene_metrics = []
@@ -176,6 +190,7 @@ def evaluate_predictions(pred_df, name):
             "kendall": kendall,
             "pairwise_acc": pairwise_accuracy(group),
             "top1_acc": top1_accuracy(group),
+            "top3_contains_best": topk_contains_best(group, k=3),
         })
 
     metrics_df = pd.DataFrame(scene_metrics)
@@ -187,6 +202,8 @@ def evaluate_predictions(pred_df, name):
     print("Mean Kendall:", metrics_df["kendall"].mean(skipna=True))
     print("Mean Pairwise Acc:", metrics_df["pairwise_acc"].mean(skipna=True))
     print("Top-1 Accuracy:", metrics_df["top1_acc"].mean(skipna=True))
+    print("Top-3 Contains Best (n>3):", metrics_df["top3_contains_best"].mean(skipna=True))
+    print("Scenes with n>3:", metrics_df["top3_contains_best"].notna().sum())
 
     return metrics_df
 
