@@ -206,6 +206,7 @@ def evaluate_scene_ranking(df: pd.DataFrame):
             "message": "No complete rank labels found. Returned predictions only.",
         }
     else:
+        top3_values = metrics_df["top3_contains_best"].dropna()
         summary = {
             "mode": "evaluation",
             "total_images": total_images,
