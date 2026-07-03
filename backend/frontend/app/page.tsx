@@ -718,6 +718,12 @@ export default function Home() {
               where the difference between rank 1 and rank 2 may be subjective or
               depend on visual information not present in the metadata.
             </p>
+
+            <p>
+              I found that feature engineering had to be validated rather than assumed. Some manually designed features, such as composite quality penalties, reduced held-out performance and were removed. In contrast, threshold-based warning features for common failure modes such as closed eyes, covered eyes, and poor main-subject quality improved test performance when used alongside continuous focus and eye-state probabilities.
+
+              This suggests that the model benefits from a combination of continuous metadata signals and lightweight domain-informed warning features, while overly rigid hand-composed scoring rules can hurt generalization.
+            </p>
           </ReadmeBlock>
 
           <ReadmeBlock title="How to Use This Demo">
