@@ -80,7 +80,7 @@ def extract_image_features(row):
     }
 
     # category one-hot
-        # category one-hot
+    # category one-hot
     category = row.get("category", "unknown")
     num_faces = row.get("num_faces", 0) or 0
 
@@ -160,6 +160,19 @@ def extract_image_features(row):
     nonmain_barelyopen_flags = []
 
     #face ratio
+    main_quality_penalties = []
+    all_quality_penalties = []
+
+    main_focus_penalties = []
+    main_eye_penalties = []
+    main_pose_penalties = []
+
+    open_probs = []
+    closed_probs = []
+    covered_probs = []
+
+    main_open_good_flags = []
+    main_bad_quality_flags = []
     
 
     eye_probs = {key: [] for key in EYE_KEYS}
@@ -199,6 +212,52 @@ def extract_image_features(row):
 
         midblink_prob = probabilities.get("midblink", 0.0)
         closed_prob = probabilities.get("closed", 0.0)
+        partiallyopen_prob = probabilities.get("partiallyopen", 0.0)
+        open_prob = probabilities.get("open", 0.0)
+        covered_prob = probabilities.get("covered", 0.0)
+        barelyopen_prob = probabilities.get("barelyopen", 0.0)
+
+
+        open_probs.append(open_prob)
+        closed_probs.append(closed_prob)
+        covered_probs.append(covered_prob)
+
+        focus_score = face.get("focus_score", 0.0) or 0.0
+        subject_weight = face.get("subject_prob_main", 0.0) or 0.0
+
+        yaw = abs(orientation.get("yaw", 0) or 0)
+        pitch = abs(orientation.get("pitch", 0) or 0)
+
+        focus_penalty = max(0.0, 70.0 - focus_score) / 70.0
+
+        eye_penalty = max(
+            closed_prob,
+            covered_prob,
+            midblink_prob,
+            barelyopen_prob,
+            0.5 * partiallyopen_prob,
+        )
+
+        pose_penalty = min(1.0, (yaw + pitch) / 90.0)
+
+        quality_penalty = (
+            0.45 * focus_penalty
+            + 0.40 * eye_penalty
+            + 0.15 * pose_penalty
+        )
+
+        all_quality_penalties.append(quality_penalty * max(subject_weight, 0.1))
+
+        if face.get("is_main_subject", False):
+            main_focus_penalties.append(focus_penalty)
+            main_eye_penalties.append(eye_penalty)
+            main_pose_penalties.append(pose_penalty)
+            main_quality_penalties.append(quality_penalty)
+            main_open_good_flags.append(int(open_prob > 0.8))
+            main_bad_quality_flags.append(int(quality_penalty > 0.5))
+
+        midblink_prob = probabilities.get("midblink", 0.0)
+        closed_prob = probabilities.get("closed", 0.0)
         barelyopen_prob = probabilities.get("barelyopen", 0.0)
 
         midblink_flag = int(midblink_prob > 0.3)
@@ -215,25 +274,27 @@ def extract_image_features(row):
             eye_probs[key].append(probabilities.get(key, 0.0))
 
         if face.get("is_main_subject", False):
-          main_focus_scores.append(face.get("focus_score", 0.0))
-          main_midblink_probs.append(probabilities.get("midblink", 0.0))
-          main_open_probs.append(probabilities.get("open", 0.0))
-          main_closed_probs.append(probabilities.get("closed", 0.0))
-          main_barelyopen_probs.append(probabilities.get("barelyopen", 0.0))
-          main_covered_probs.append(probabilities.get("covered", 0.0))
-          main_yaw_abs.append(abs(orientation.get("yaw", 0) or 0))
-          main_pitch_abs.append(abs(orientation.get("pitch", 0) or 0))
-          main_face_area_ratios.append(area_ratio)
+            main_focus_scores.append(face.get("focus_score", 0.0))
+            main_midblink_probs.append(probabilities.get("midblink", 0.0))
+            main_open_probs.append(probabilities.get("open", 0.0))
+            main_closed_probs.append(probabilities.get("closed", 0.0))
+            main_barelyopen_probs.append(probabilities.get("barelyopen", 0.0))
+            main_covered_probs.append(probabilities.get("covered", 0.0))
+            main_yaw_abs.append(abs(orientation.get("yaw", 0) or 0))
+            main_pitch_abs.append(abs(orientation.get("pitch", 0) or 0))
+            main_face_area_ratios.append(area_ratio)
 
-          main_bad_eye_flags.append(bad_eye_flag)
-          main_midblink_flags.append(midblink_flag)
-          main_closed_flags.append(closed_flag)
-          main_barelyopen_flags.append(barelyopen_flag)
+            main_bad_eye_flags.append(bad_eye_flag)
+            main_midblink_flags.append(midblink_flag)
+            main_closed_flags.append(closed_flag)
+            main_barelyopen_flags.append(barelyopen_flag)
         else:
-          nonmain_bad_eye_flags.append(bad_eye_flag)
-          nonmain_midblink_flags.append(midblink_flag)
-          nonmain_closed_flags.append(closed_flag)
-          nonmain_barelyopen_flags.append(barelyopen_flag)
+            nonmain_bad_eye_flags.append(bad_eye_flag)
+            nonmain_midblink_flags.append(midblink_flag)
+            nonmain_closed_flags.append(closed_flag)
+            nonmain_barelyopen_flags.append(barelyopen_flag)
+
+    
     
     low_focus_threshold = 50.0
 
@@ -246,11 +307,11 @@ def extract_image_features(row):
     features["low_focus_face_ratio"] = (
     features["num_low_focus_faces"] / num_faces_selected
     if num_faces_selected > 0 else 0.0
-)
+    )
 
     features["all_faces_good_focus"] = int(
     num_faces_selected > 0 and features["num_low_focus_faces"] == 0
-)
+    )
 
     # Main-subject bad-eye features: stronger quality signal.
     features["num_main_faces"] = num_main_faces
@@ -258,7 +319,7 @@ def extract_image_features(row):
     features["main_bad_eye_ratio"] = (
     features["num_main_bad_eye_faces"] / num_main_faces
     if num_main_faces > 0 else 0.0
-)
+    )
 
     features["num_main_midblink_faces"] = int(np.sum(main_midblink_flags)) if main_midblink_flags else 0
     features["num_main_closed_faces"] = int(np.sum(main_closed_flags)) if main_closed_flags else 0
@@ -274,7 +335,7 @@ def extract_image_features(row):
     features["nonmain_bad_eye_ratio"] = (
     features["num_nonmain_bad_eye_faces"] / num_nonmain_faces
     if num_nonmain_faces > 0 else 0.0
-)
+    )
 
     features["num_nonmain_midblink_faces"] = int(np.sum(nonmain_midblink_flags)) if nonmain_midblink_flags else 0
     features["num_nonmain_closed_faces"] = int(np.sum(nonmain_closed_flags)) if nonmain_closed_flags else 0
@@ -339,7 +400,31 @@ def extract_image_features(row):
     # composition rough features
     features["largest_face_area_ratio"] = safe_max(face_area_ratios)
     features["total_face_area_ratio"] = float(np.sum(face_area_ratios)) if face_area_ratios else 0.0
-    
+
+    #features["main_quality_penalty_mean"] = safe_mean(main_quality_penalties)
+    #features["main_quality_penalty_max"] = safe_max(main_quality_penalties)
+    #features["main_quality_penalty_min"] = safe_min(main_quality_penalties)
+
+    features["main_focus_penalty_max"] = safe_max(main_focus_penalties)
+    features["main_eye_penalty_max"] = safe_max(main_eye_penalties)
+    features["main_pose_penalty_max"] = safe_max(main_pose_penalties)
+
+    #features["all_weighted_quality_penalty_mean"] = safe_mean(all_quality_penalties)
+    #features["all_weighted_quality_penalty_max"] = safe_max(all_quality_penalties)
+
+    features["main_all_open_ratio"] = (
+    float(np.mean(main_open_good_flags)) if main_open_good_flags else 0.0
+    )
+
+    features["num_main_bad_quality_faces"] = (
+    int(np.sum(main_bad_quality_flags)) if main_bad_quality_flags else 0
+    )
+
+    features["any_main_bad_quality"] = int(features["num_main_bad_quality_faces"] > 0)
+
+    features["group_open_prob_min"] = safe_min(open_probs)
+    features["group_closed_prob_max"] = safe_max(closed_probs)
+    features["group_covered_prob_max"] = safe_max(covered_probs)
 
     return features
 
@@ -372,3 +457,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
