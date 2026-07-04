@@ -194,6 +194,12 @@ The model is strongest at separating clearly good and clearly weak images. Adjac
 
 ---
 
+## Top-1 Error Analysis
+
+I also inspected Top-1 error scenes by comparing the ground-truth rank 1 image with the model's predicted rank 1 image. In this run, most Top-1 errors were near misses where the model selected a rank 2 or rank 3 image. The largest raw feature differences were mostly related to yaw/pose, focus quality, main-subject focus, and eye-state warning features.
+
+This suggests that the model often relies on technical face-quality metadata when selecting the top image. Some remaining mistakes likely come from subjective or visual factors not fully represented in the metadata, such as expression, moment quality, composition, or photographer preference.
+
 ## Running the Training Pipeline
 
 From the project root:
@@ -295,6 +301,7 @@ The current demo focuses on metadata-based ranking and evaluation. A production 
 - optional visual embeddings to capture composition, emotion, and aesthetics beyond face metadata
 
 ---
+
 
 ## Summary
 
