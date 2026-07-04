@@ -11,6 +11,24 @@ The final system uses a **pairwise Gradient Boosting model** trained on feature 
 
 ---
 
+## Executive Summary
+
+This project predicts the relative ranking of wedding photos within each scene. The key modeling decision is that `rank` is not a global photo-quality label: rank 1 only means the best image inside its own scene.
+
+I therefore formulate the task as a within-scene ranking problem rather than ordinary regression. The final model uses pairwise comparisons between images from the same scene, then aggregates pairwise win probabilities into a final scene-level ordering.
+
+The solution includes:
+
+- data cleaning for noisy face-detection records
+- face-level to image-level feature aggregation
+- handling of missing ranks, no-face images, and multi-face images
+- shoot-level train/validation/test split to reduce leakage
+- baseline experiments including raw rank regression, normalized rank regression, pairwise ranking, and LightGBM ranker
+- scene-level ranking evaluation using Pairwise Accuracy, Top-1 Accuracy, Top-3 Coverage, Spearman, and Kendall Tau
+- a deployed demo for prediction and evaluation
+
+I compared raw rank regression, normalized rank regression, pairwise ranking, LightGBM ranker, and heuristic/domain features. The model learns useful ranking signals from face detection metadata, especially focus, eye state, subject confidence, and main-subject quality.
+
 ## Final Test Results
 
 The final model was evaluated on a held-out shoot-level test split.
@@ -228,6 +246,17 @@ The displayed scores are **relative pairwise tournament scores** within each sce
 Very similar images may receive tied or near-tied scores, especially in small scenes with only two or three candidates.
 
 ---
+
+## Design Decisions
+
+| Decision | Reason |
+|---|---|
+| Pairwise ranking instead of raw rank regression | Ranks are scene-relative, not global labels |
+| Shoot-level split | Reduces leakage from visually similar photos in the same wedding |
+| Gradient Boosting classifier | Suitable for small tabular data and fast inference |
+| Preserve continuous face probabilities | Avoids discarding signal from eye-state, focus, and confidence scores |
+| Add threshold warning flags | Provides interpretable auxiliary indicators without replacing continuous features |
+| Evaluate with Top-1, Top-3, pairwise accuracy, Spearman, Kendall | Metrics match the product goal of selecting the best images within a scene |
 
 ## Limitations and Future Work
 
