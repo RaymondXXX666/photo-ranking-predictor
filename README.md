@@ -302,6 +302,11 @@ The current demo focuses on metadata-based ranking and evaluation. A production 
 
 ---
 
+## Limitation
+
+One limitation is that the assignment does not specify how the ground-truth ranks were produced. I therefore treat the `rank` field as an upstream supervised label rather than assuming it perfectly represents photographer preference. This affects how model errors should be interpreted: some Top-1 mismatches may reflect visual or subjective factors not captured in the metadata, while others may reflect label noise or preferences encoded by the upstream ranking process.
+
+
 
 ## Summary
 
