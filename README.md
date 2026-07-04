@@ -29,6 +29,20 @@ The solution includes:
 
 I compared raw rank regression, normalized rank regression, pairwise ranking, LightGBM ranker, and heuristic/domain features. The model learns useful ranking signals from face detection metadata, especially focus, eye state, subject confidence, and main-subject quality.
 
+## Data Split
+
+I split the data by wedding shoot rather than by individual image to reduce leakage from visually similar photos within the same wedding. This keeps all scenes from the same shoot in the same split.
+
+The final split was:
+
+- Train: `wedding_shoot_01` to `wedding_shoot_08`
+- Validation: `wedding_shoot_09`
+- Test: `wedding_shoot_10`
+
+This produced an image-level split close to a 60:20:20 ratio while still preserving shoot-level separation.
+
+A limitation is that the validation and test sets are each based on a single held-out shoot, so the final numbers may still be sensitive to the style and difficulty of those particular shoots. With more data, I would run leave-one-shoot-out or grouped cross-validation across shoots.
+
 ## Final Test Results
 
 The final model was evaluated on a held-out shoot-level test split.
@@ -143,6 +157,9 @@ I treated feature engineering as an empirical question rather than assuming ever
 
 This suggests that lightweight domain-informed warning features were useful in this dataset, but overly rigid hand-composed scoring rules could hurt generalization.
 
+
+Important: the threshold-based features were not used to binarize or replace the original continuous probability features. The continuous eye-state probabilities, focus scores, and confidence signals were retained throughout. Threshold features were tested only as additional warning indicators.
+
 ---
 
 ## Evaluation Metrics
@@ -239,6 +256,7 @@ http://localhost:3000
 
 ---
 
+
 ## Notes on Prediction Scores
 
 The displayed scores are **relative pairwise tournament scores** within each scene. They are used for ordering images inside the same scene and are not calibrated probabilities across different scenes.
@@ -264,7 +282,17 @@ Very similar images may receive tied or near-tied scores, especially in small sc
 - The current model does not use explicit scene-level normalization. Since training is pairwise within each scene, shared scene-level offsets are partially reduced by feature differencing, but explicit scene-normalized features could be tested in a future iteration.
 - Some quality features use hand-defined thresholds. These are used as interpretable warning features, not as hard ranking rules.
 - The model relies on upstream face detection metadata and does not directly inspect raw image pixels. Future work could combine metadata features with lightweight visual embeddings for composition, emotion, and overall image aesthetics.
-- The current demo focuses on metadata-based ranking and evaluation. A production system would also need stronger input validation, monitoring, user feedback loops, and calibration across more diverse shoots.
+
+## Production Considerations
+
+The current demo focuses on metadata-based ranking and evaluation. A production version would need:
+
+- stronger input validation and error handling for inconsistent detection JSON files
+- monitoring for feature drift across different photographers, venues, and lighting conditions
+- user feedback loops so photographer selections can improve future ranking behavior
+- calibration across more diverse shoots
+- clearer handling of tied or near-tied predictions in small scenes
+- optional visual embeddings to capture composition, emotion, and aesthetics beyond face metadata
 
 ---
 
