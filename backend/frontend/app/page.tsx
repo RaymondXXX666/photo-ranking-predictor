@@ -347,7 +347,7 @@ export default function Home() {
                         <th className="py-3 pr-4">True Rank</th>
                       )}
                       <th className="py-3 pr-4">Predicted Position</th>
-                      <th className="py-3 pr-4">Score</th>
+                      <th className="py-3 pr-4">Relative Score</th>
                     </tr>
                   </thead>
 
